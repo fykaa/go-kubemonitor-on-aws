@@ -31,7 +31,7 @@
 <div class="alert">{{ message }}</div>
 {% endif %}
 
-<script>
+
    <script>
     function createChart(ctx, label, data) {
         new Chart(ctx, {
@@ -58,6 +58,6 @@
     createChart(document.getElementById('memChart').getContext('2d'), 'Memory', {{ mem_metric }});
 </script>
 
-</script>
+
 </body>
 </html>
