@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="eng">
+<head>
+    <title>System Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        canvas {
+            max-width: 800px;
+            margin: 20px auto;
+            display: block;
+            background-color: rgba(151, 128, 128, 0.688);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #343a40;
+        }
+        .alert {
+            text-align: center;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<h1>System Monitoring</h1>
+<canvas id="cpuChart"></canvas>
+<canvas id="memChart"></canvas>
+{% if message %}
+<div class="alert">{{ message }}</div>
+{% endif %}
+
+<script>
+    var ctxCpu = document.getElementById('cpuChart').getContext('2d');
+    var ctxMem = document.getElementById('memChart').getContext('2d');
+
+    var cpuData = {
+        labels: ['CPU'],
+        datasets: [{
+            label: 'CPU Utilization',
+            backgroundColor: '#1f77b4',
+            data: [{{ cpu_metric }}]
+    }]
+    };
+
+    var memData = {
+        labels: ['Memory'],
+        datasets: [{
+            label: 'Memory Utilization',
+            backgroundColor: '#1f77b4',
+            data: [{{ mem_metric }}]
+    }]
+    };
+
+    var cpuChart = new Chart(ctxCpu, {
+        type: 'bar',
+        data: cpuData,
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+
+    var memChart = new Chart(ctxMem, {
+        type: 'bar',
+        data: memData,
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+</script>
+</body>
+</html>
