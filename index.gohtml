@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>System Monitor</title>
+</head>
+<body>
+<h1>System Monitor</h1>
+<p>CPU Utilization: {{index .CpuPercent 0}}%</p>
+<p>Memory Utilization: {{.MemPercent.UsedPercent}}%</p>
+{{if .Message}}
+    <p style="color:red;">{{.Message}}</p>
+{{end}}
+</body>
+</html>

@@ -5,6 +5,7 @@ go 1.22.3
 require github.com/shirou/gopsutil v3.21.11+incompatible
 
 require (
+	github.com/c9s/goprocinfo v0.0.0-20210130143923-c95fcf8c64a8 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
