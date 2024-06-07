@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
@@ -18,72 +19,81 @@ func init() {
 	tpl = template.Must(template.ParseFiles("index.gohtml"))
 }
 
-// Monitor struct to store CPU and Memory statistics and a message
-type monitor struct {
-	CpuPercent []float64
-	MemPercent *mem.VirtualMemoryStat
-	Message    string
+// Monitor struct to store CPU and Memory statistics for JSON response
+type Monitor struct {
+	CpuPercent float64 `json:"cpuPercent"`
+	MemPercent float64 `json:"memPercent"`
 }
 
-// Data variable to hold the monitor struct
-var data monitor
-
-// Thresholds for CPU and Memory usage
+// Constants for CPU and Memory usage thresholds
 const (
 	HighUsageThreshold = 50.0
 )
 
-// Index handler function for the root URL
+// index handler function for the root URL
 func index(w http.ResponseWriter, r *http.Request) {
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	// Fetch CPU usage concurrently
-	go func() {
-		defer wg.Done()
-		cpuPercent, err := cpu.Percent(0, false)
-		if err != nil {
-			log.Println("Error fetching CPU percent:", err)
-			return
-		}
-		data.CpuPercent = cpuPercent
-	}()
-
-	// Fetch memory usage concurrently
-	go func() {
-		defer wg.Done()
-		memPercent, err := mem.VirtualMemory()
-		if err != nil {
-			log.Println("Error fetching memory percent:", err)
-			return
-		}
-		data.MemPercent = memPercent
-	}()
-
-	wg.Wait()
-
-	// Determine the message based on the thresholds
-	data.Message = ""
-	if data.CpuPercent[0] > HighUsageThreshold && data.MemPercent.UsedPercent > HighUsageThreshold {
-		data.Message = "Warning: High CPU and Memory usage detected. Optimize your application and scale resources if needed."
-	} else if data.CpuPercent[0] > HighUsageThreshold {
-		data.Message = "Warning: High CPU usage detected. Optimize your application for better performance."
-	} else if data.MemPercent.UsedPercent > HighUsageThreshold {
-		data.Message = "Warning: High Memory usage detected. Consider scaling your resources."
-	} else {
-		data.Message = "CPU and Memory usage are within acceptable limits. Keep up the good work!"
-	}
-
-	// Execute the template with the monitor data
-	err := tpl.ExecuteTemplate(w, "index.gohtml", data)
+	err := tpl.ExecuteTemplate(w, "index.gohtml", nil)
 	if err != nil {
 		log.Println("Error executing template:", err)
 	}
 }
 
-// Main function to start the HTTP server
+// usage handler function for serving CPU and Memory usage data in JSON format
+func usage(w http.ResponseWriter, r *http.Request) {
+	var wg sync.WaitGroup
+	var cpuPercent []float64
+	var memStats *mem.VirtualMemoryStat
+	var cpuErr, memErr error
+
+	// Use WaitGroup to handle concurrent fetching of CPU and memory usage
+	wg.Add(2)
+
+	// Fetch CPU usage concurrently
+	go func() {
+		defer wg.Done()
+		cpuPercent, cpuErr = cpu.Percent(0, false)
+	}()
+
+	// Fetch memory usage concurrently
+	go func() {
+		defer wg.Done()
+		memStats, memErr = mem.VirtualMemory()
+	}()
+
+	wg.Wait()
+
+	// Check for errors and handle them
+	if cpuErr != nil {
+		http.Error(w, "Error fetching CPU usage: "+cpuErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	if memErr != nil {
+		http.Error(w, "Error fetching memory usage: "+memErr.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Create a Monitor instance with the fetched data
+	monitorData := Monitor{
+		CpuPercent: cpuPercent[0],
+		MemPercent: memStats.UsedPercent,
+	}
+
+	// Convert the Monitor instance to JSON format
+	jsonResponse, err := json.MarshalIndent(monitorData, "", "  ")
+	if err != nil {
+		http.Error(w, "Error generating JSON response: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set the Content-Type header and write the JSON response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
+// main function to start the HTTP server
 func main() {
 	http.HandleFunc("/", index)
+	http.HandleFunc("/usage", usage)
 	fmt.Println("Server running on port :8080")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

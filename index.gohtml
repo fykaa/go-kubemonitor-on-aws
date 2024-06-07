@@ -1,15 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>System Monitor</title>
+    <title>Resource Tracker</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js"></script>
 </head>
 <body>
-<h1>System Monitor</h1>
-<p>CPU Utilization: {{index .CpuPercent 0}}%</p>
-<p>Memory Utilization: {{.MemPercent.UsedPercent}}%</p>
-{{if .Message}}
-    <p style="color:red;">{{.Message}}</p>
-{{end}}
+<div class="container">
+    <h1>Resource Tracker</h1>
+    <div id="cpu-mem-timeseries"></div>
+</div>
+<script>
+    // Initialize arrays to store the data
+    var timestamps = [];
+    var cpuUsage = [];
+    var memUsage = [];
+
+    // Function to get the current time in a suitable format
+    function getCurrentTime() {
+        return new Date().toISOString();
+    }
+
+    // Function to fetch data from the server
+    function fetchData() {
+        $.ajax({
+            url: 'http://localhost:8080/usage',  // Updated port number
+            method: 'GET',
+            success: function(data) {
+                updateGraph(data.cpuPercent, data.memPercent);
+            }
+        });
+    }
+
+    // Function to update the graph with new data
+    function updateGraph(newCpuUsage, newMemUsage) {
+        // Append new data to the arrays
+        timestamps.push(getCurrentTime());
+        cpuUsage.push(newCpuUsage);
+        memUsage.push(newMemUsage);
+
+        // Keep the arrays at a maximum length (e.g., the last 60 seconds)
+        if (timestamps.length > 60) {
+            timestamps.shift();
+            cpuUsage.shift();
+            memUsage.shift();
+        }
+
+        // Update the Plotly graph
+        var data = [
+            {
+                type: "scatter",
+                mode: "lines",
+                name: 'CPU Usage',
+                x: timestamps,
+                y: cpuUsage,
+                line: {color: '#17BECF'}
+            },
+            {
+                type: "scatter",
+                mode: "lines",
+                name: 'Memory Usage',
+                x: timestamps,
+                y: memUsage,
+                line: {color: '#7F7F7F'}
+            }
+        ];
+
+        var layout = {
+            title: 'CPU and Memory Usage Over Time',
+            xaxis: {
+                autorange: true,
+                type: 'date'
+            },
+            yaxis: {
+                autorange: true,
+                range: [0, 100],
+                type: 'linear'
+            }
+        };
+
+        Plotly.newPlot('cpu-mem-timeseries', data, layout);
+    }
+
+    // Fetch data every second
+    setInterval(fetchData, 1000);
+</script>
 </body>
 </html>
