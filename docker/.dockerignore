@@ -1,0 +1,24 @@
+# binaries
+main
+*.exe
+
+# dependency directories
+/vendor
+
+# temp files
+*.tmp
+
+# IDE/editor specific files
+.vscode
+.idea
+
+# Go specific
+*.out
+*.exe
+*.log
+*.mod
+*.sum
+
+# Git specific
+.git
+.gitignore
