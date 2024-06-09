@@ -1,15 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>System Monitor</title>
+    <title>Resource Tracker</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js"></script>
 </head>
 <body>
-<h1>System Monitor</h1>
-<p>CPU Utilization: {{index .CpuPercent 0}}%</p>
-<p>Memory Utilization: {{.MemPercent.UsedPercent}}%</p>
-{{if .Message}}
-    <p style="color:red;">{{.Message}}</p>
-{{end}}
+<div class="container">
+    <h1>Resource Tracker</h1>
+    <div id="cpu-mem-timeseries"></div>
+</div>
+<script>
+    // Initialize arrays to store the data
+    var timestamps = [];
+    var cpuUsage = [];
+    var memUsage = [];
+
+    // Function to get the current time in a suitable format
+    function getCurrentTime() {
+        return new Date().toISOString();
+    }
+
+    // Function to fetch data from the server
+    function fetchData() {
+        $.ajax({
+            url: 'http://localhost:8080/usage',
+            method: 'GET',
+            success: function(data) {
+                updateGraph(data.cpuPercent, data.memPercent);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching data:', error);
+                alert('Error fetching data. Please try again later.');
+            }
+        });
+    }
+
+    // Function to update the graph with new data
+    function updateGraph(newCpuUsage, newMemUsage) {
+        // Append new data to the arrays
+        var currentTime = getCurrentTime();
+        timestamps.push(currentTime);
+        cpuUsage.push(newCpuUsage);
+        memUsage.push(newMemUsage);
+
+        // Keep the arrays at a maximum length (e.g., the last 60 seconds)
+        if (timestamps.length > 60) {
+            timestamps.shift();
+            cpuUsage.shift();
+            memUsage.shift();
+        }
+
+        // Update the Plotly graph using extendTraces
+        Plotly.extendTraces('cpu-mem-timeseries', {
+            x: [[currentTime], [currentTime]],
+            y: [[newCpuUsage], [newMemUsage]]
+        }, [0, 1]);
+
+        // Optionally, you can use relayout to adjust the x-axis range
+        Plotly.relayout('cpu-mem-timeseries', {
+            xaxis: {
+                range: [timestamps[0], timestamps[timestamps.length - 1]]
+            }
+        });
+    }
+
+    // Initial plot setup
+    var initialData = [
+        {
+            type: "scatter",
+            mode: "lines",
+            name: 'CPU Usage',
+            x: [],
+            y: [],
+            line: {color: '#17BECF'}
+        },
+        {
+            type: "scatter",
+            mode: "lines",
+            name: 'Memory Usage',
+            x: [],
+            y: [],
+            line: {color: '#7F7F7F'}
+        }
+    ];
+
+    var layout = {
+        title: 'CPU and Memory Usage Over Time',
+        xaxis: {
+            autorange: true,
+            type: 'date'
+        },
+        yaxis: {
+            autorange: true,
+            range: [0, 100],
+            type: 'linear'
+        }
+    };
+
+    Plotly.newPlot('cpu-mem-timeseries', initialData, layout);
+
+    // Fetch data every second
+    setInterval(fetchData, 1000);
+</script>
 </body>
 </html>
