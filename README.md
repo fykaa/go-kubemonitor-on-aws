@@ -109,4 +109,3 @@ You will need a code editor (e.g., VS Code).
 
 ## Tip for Efficient Learning
 To gain deeper insights into the project's development, check out the [branches](https://github.com/fykaa/go-kubemonitor-on-aws/branches) and [PR commits](https://github.com/fykaa/go-kubemonitor-on-aws/pulls?q=is%3Apr+label%3Aoptimization+). Each pull request documents the iterative improvements and thought process behind optimizing the project. This approach will help you understand the evolution of the project from the initial version to the optimized version.
-
