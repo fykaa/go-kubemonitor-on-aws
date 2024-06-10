@@ -66,7 +66,7 @@ You will need a code editor (e.g., VS Code).
 - Docker commands.
 
 1. **Create Dockerfile**:
-    - The Dockerfile is located in the root directory and named `Dockerfile`.
+    - The Dockerfile is located in the root directory and named `docker/Dockerfile`.
     - **What the Dockerfile does**:
         - **Stage 1**: Uses a Golang image to build the Go application. [For more information](https://hub.docker.com/_/golang).
         - **Stage 2**: Creates a minimal image containing only the necessary files to run the application.
@@ -75,8 +75,9 @@ You will need a code editor (e.g., VS Code).
 
 2. **Build Docker Image**:
     ```sh
-    docker build -t kubemonitor .
+    docker build -f docker/Dockerfile -t kubemonitor .
     ```
+   PTR: Docker does not allow accessing files outside the build context directory. Hence, you should run the docker build command from the parent directory and specify the path to the Dockerfile using the `-f` flag.
 
 3. **Run Docker Container Locally**:
     ```sh
