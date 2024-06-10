@@ -84,28 +84,78 @@ You will need a code editor (e.g., VS Code).
     docker run -p 8080:8080 kubemonitor
     ```
 
-## Step 3: Push to AWS ECR using Go
+## Step 3: Create an Elastic Container Registry Programmatically using Go
 
 #### Tools and Packages Used
-- AWS SDK for Go
+- [AWS SDK for Go](https://aws.github.io/aws-sdk-go-v2/)
 
 #### Key Learning Points
 - Creating an ECR repository using Go.
 - Pushing a Docker image to ECR.
 
-1. **Create ECR Repository using Go**:
-    - Write Go code to interact with AWS SDK and create an ECR repository.
-    - Refer to the code in `ecr.go` file in this repository.
+
+1. Write program for creating ECR
+   - Write Go code to interact with AWS SDK and create an ECR repository.
+   - Refer to the code in the `ecr.go` file in this repository.
+   - Run `go get` for the following packages:
+     ```go
+     go get github.com/aws/aws-sdk-go-v2/aws
+     go get github.com/aws/aws-sdk-go-v2/config
+     go get github.com/aws/aws-sdk-go-v2/service/ecr
+     ```
+
+2. Create the ECR
+   - Use the code file `ecr.go` to create an ECR repository programmatically in AWS by running `go run ecr.go`. 
+   - Follow the link displayed on the screen.
+   ![img.png](assets/ecrRepoCreated.png)
+
+3. Deploy Images to This ECR Repo Using Commands
+
+   - Visit the ECR repositories management console. 
+   - Select the `kubemonitor` repository created programmatically. 
+   - Click on the "View push commands" button. 
+   - ![img.png](assets/viewPushCommand.png)
+   - Copy and paste the push commands into your terminal to push your project's Docker image to ECR.
+   
+      ```sh
+      $ aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 474802787127.dkr.ecr.us-west-2.amazonaws.com
+      Login Succeeded
+      $ docker build -t kubemonitor ../docker/
+      cd .. && docker build -f docker/Dockerfile -t kubemonitor .
+      [+] Building 12.6s (14/14) FINISHED
+      $ docker tag kubemonitor:latest 474807127.dkr.ecr.us-east-2.amazonaws.com/kubemonitor:latest
+      $ docker push 474807127.dkr.ecr.us-east-2.amazonaws.com/kubemonitor:latest 
+      The push refers to repository [474802787127.dkr.ecr.us-west-2.amazonaws.com/kubemonitor]
+      ff5efa5d43: Pushed
+      904bfb4dc0: Pushed
+      c0b1668132: Pushed
+      latest: digest: sha256:7130c499daad9cc0ac599bc86d06bafc97727 size: 942
+      ```
+   - Image is now pushed to ECR
+      ![img.png](assets/dockerPushImageECR.png)
+For detailed guide refer aws-ecr/README.md   
 
 ## Step 4: Deploy on Kubernetes (EKS)
 
-(steps and details on deploying the application on eks remaining)
+1. creating an eks k8s cluster with nodes
+2. open eks
+3. create cluster, give name
+4. defaults
+5. 4 subnets
+6. defaults
+7. ONCE cluster is created
+8. create a node group - give a name, attach an iam
+9.
+
+
+we will use go client for kubernetes to manage kubernetes. for this we will use a client [go library](https://pkg.go.dev/k8s.io/client-go/kubernetes)
+
 
 ### Key Learning Points
 - Learning Kubernetes.
 - Creating an EKS cluster and node groups.
 - Creating Kubernetes deployments and services using Go.
-
+- Client Go Library
 
 ## Tip for Efficient Learning
 To gain deeper insights into the project's development, check out the [branches](https://github.com/fykaa/go-kubemonitor-on-aws/branches) and [PR commits](https://github.com/fykaa/go-kubemonitor-on-aws/pulls?q=is%3Apr+label%3Aoptimization+). Each pull request documents the iterative improvements and thought process behind optimizing the project. This approach will help you understand the evolution of the project from the initial version to the optimized version.
