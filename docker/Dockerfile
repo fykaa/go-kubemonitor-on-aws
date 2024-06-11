@@ -3,14 +3,14 @@ FROM golang:1.22.3-alpine AS builder
 
 WORKDIR /app
 
-# Copy go.mod and go.sum files
-COPY ../go.mod go.sum ./
+# Copy go.mod and go.sum files from the parent directory
+COPY ../go.mod ../go.sum ./
 
 # Downloading dependencies
 RUN go mod download
 
-# Copy the source code
-COPY .. .
+# Copy the source code from the parent directory
+COPY ../ ./
 
 # Building the Go binary
 RUN go build -o main main.go
