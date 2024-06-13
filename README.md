@@ -6,7 +6,7 @@ This project is a Cloud Native system resource monitoring application built with
 
 ## Architecture Diagram
 
-(project flow diagram here)
+![projFlow.png](assets/kubemonitor.svg)
 
 ## Setting Up Your Development Environment
 
